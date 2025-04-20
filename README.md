@@ -47,7 +47,7 @@ ScaryRF+ —  крутой проект который дает возможно
 
 ## 🚀 About ScaryRF+
 ScaryRF+ is a cool project that gives you the opportunity to show what ESP32 is capable of.🔥 
-This is an improved version of the original [ScaryRF] project (https://github.com/FernandoHansen666/ScaryRF-315-433mhz). 
+This is an improved version of the original [ScaryRF](https://github.com/FernandoHansen666/ScaryRF-315-433mhz). 
 *The project is under active development, some functions may be unstable*
 
 ## ⚡ Features
