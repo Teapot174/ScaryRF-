@@ -4,7 +4,7 @@
 
 <div id="ru">
   
-## 🚀 О проекте ScaryRF-Plus
+## 🚀 О проекте ScaryRF+
 ScaryRF+ —  крутой проект который дает возможность показать на что способна ESP32.🔥  
 Это улучшенная версия оригинального проекта [ScaryRF](https://github.com/FernandoHansen666/ScaryRF-315-433mhz).  
 *Проект в активной разработке, некоторые функции могут работать нестабильно*
@@ -45,10 +45,10 @@ ScaryRF+ —  крутой проект который дает возможно
 
 <div id="en" hidden>
 
-## 🚀 About ScaryRF-Plus
-ScaryRF+ is a powerful ESP32-based multi-tool for radio frequency and wireless interfaces. 🔥  
-This is an improved version of the original [ScaryRF](https://github.com/FernandoHansen666/ScaryRF-315-433mhz) project.  
-*Project is under active development, some features may work unstable*
+## 🚀 About ScaryRF+
+ScaryRF+ is a cool project that gives you the opportunity to show what ESP32 is capable of.🔥 
+This is an improved version of the original [ScaryRF] project (https://github.com/FernandoHansen666/ScaryRF-315-433mhz). 
+*The project is under active development, some functions may be unstable*
 
 ## ⚡ Features
 ### 📶 SubGHz (315/433 MHz)
