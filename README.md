@@ -84,15 +84,3 @@ This is an improved version of the original [ScaryRF](https://github.com/Fernand
 ![ScaryRF+ Device](https://github.com/user-attachments/assets/b9ef9adc-ac90-4940-b71d-091447080114)
 
 </div>
-
-<script>
-  // Simple language switcher
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      e.preventDefault();
-      const lang = this.getAttribute('href').substring(1);
-      document.getElementById('ru').hidden = lang !== 'ru';
-      document.getElementById('en').hidden = lang !== 'en';
-    });
-  });
-</script>
