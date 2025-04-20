@@ -1,5 +1,8 @@
 <div align="left">
   <h1>📡 ScaryRF-Plus   <a href="#ru">Русский</a> | <a href="#en">English</a></h1>
+
+![ScaryRF-Plus](https://github.com/user-attachments/assets/baec7610-9770-4be8-9382-811defc3bb06)
+
 </div>
 
 <div id="ru">
