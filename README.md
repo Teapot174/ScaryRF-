@@ -43,7 +43,7 @@ ScaryRF+ —  крутой проект который дает возможно
 |**🔘 Buttons**|K1 → G27|K2 → G26|K3 → G33|K4 → G32|-|-|-|
 |**📡 CC1101**|1 → GND|2 → 3V3|3 → G2|4 → G5|5 → G18|6 → G23 |7 → G19|
 
-### 📸 Финальная сборка
+### 📸 Финальный результат
 ![ScaryRF+ Device](https://github.com/user-attachments/assets/b9ef9adc-ac90-4940-b71d-091447080114)
 
 </div>
@@ -89,7 +89,7 @@ This is an improved version of the original [ScaryRF](https://github.com/Fernand
 |**🔘 Buttons**|K1 → G27|K2 → G26|K3 → G33|K4 → G32|-|-|-|
 |**📡 CC1101**|1 → GND|2 → 3V3|3 → G2|4 → G5|5 → G18|6 → G23 |7 → G19|
 
-### 📸 Final Assembly
+### 📸 The final result
 ![ScaryRF+ Device](https://github.com/user-attachments/assets/b9ef9adc-ac90-4940-b71d-091447080114)
 
 </div>
