@@ -1,4 +1,4 @@
-<div align="center">
+<div align="left">
   <h1>📡 ScaryRF-Plus   <a href="#ru">Русский</a> | <a href="#en">English</a></h1>
 </div>
 
