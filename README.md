@@ -1,5 +1,5 @@
 <div align="left">
-  <h1>📡 ScaryRF-Plus   <a href="#ru">Русский</a> | <a href="#en">English</a></h1>
+  <h1>📡 ScaryRF+   <a href="#ru">Русский</a> | <a href="#en">English</a></h1>
 </div>
 
 <div id="ru">
