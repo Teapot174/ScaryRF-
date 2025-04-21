@@ -62,7 +62,7 @@ This is a continuation and improvement of the original [ScaryRF](https://github.
 *The project is under active development, some functions may be unstable*
 ### ⚠️ Disclaimer
 This firmware is designed exclusively for research purposes and hardware testing. When using the firmware, you must take into account the laws of your regio. The firmware creator is not responsible for your actions.                            
-*Activation of the firmware means that you fully agree to these terms*                            
+*Using the firmware means that you fully agree to these terms*                            
 
 ## ⚡ Features
 ### 📶 SubGHz (315/433 MHz)
