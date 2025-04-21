@@ -12,7 +12,7 @@ ScaryRF+ —  крутой проект который дает возможно
 Это продолжение и улучшение оригинального проекта [ScaryRF](https://github.com/FernandoHansen666/ScaryRF-315-433mhz).  
 *Проект в активной разработке, некоторые функции могут работать нестабильно*
 ### ⚠️ Дисклеймер
-Данная прошивка разработана исключительно для исследовательских целей и тестирования оборудования. Используя прошивку вы обязаны учитывать законодательство своего региона и этику. Создатель прошивки не несет ответственность за ваши действия.                            
+Данная прошивка разработана исключительно для исследовательских целей и тестирования оборудования. Используя прошивку вы обязаны учитывать законодательство своего региона. Создатель прошивки не несет ответственность за ваши действия.                            
 *Использование прошивки означает ваше полное согласие с этими условиями*                            
 
 ## ⚡ Возможности
@@ -61,7 +61,7 @@ ScaryRF+ is a cool project that gives you the opportunity to show what ESP32 is 
 This is a continuation and improvement of the original [ScaryRF](https://github.com/FernandoHansen666/ScaryRF-315-433mhz). 
 *The project is under active development, some functions may be unstable*
 ### ⚠️ Disclaimer
-This firmware is designed exclusively for research purposes and hardware testing. When using the firmware, you must take into account the laws of your region and ethics. The firmware creator is not responsible for your actions.                            
+This firmware is designed exclusively for research purposes and hardware testing. When using the firmware, you must take into account the laws of your regio. The firmware creator is not responsible for your actions.                            
 *Activation of the firmware means that you fully agree to these terms*                            
 
 ## ⚡ Features
